@@ -233,7 +233,11 @@ def get_retrieval_model(model_config: Dict) -> BaseRetrievalModel:
         # For local models, use the model path and specify model type
         model_path = model_config.get('path', model_name)
         local_model_type = model_config.get('local_model_type', 'sentence_transformer')
-        return LocalModel(model_path, device, local_model_type, **model_config)
+        
+        # Filter out parameters that are already explicitly passed
+        filtered_config = {k: v for k, v in model_config.items() 
+                          if k not in ['device', 'local_model_type', 'path', 'name', 'type']}
+        return LocalModel(model_path, device, local_model_type, **filtered_config)
     else:
         # Default to Sentence Transformer
         return SentenceTransformerModel(model_name, device, **model_config)

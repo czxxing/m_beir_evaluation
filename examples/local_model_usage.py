@@ -6,6 +6,7 @@
 import os
 import sys
 from pathlib import Path
+from sklearn.metrics.pairwise import cosine_similarity
 
 # 添加项目根目录到Python路径
 project_root = Path(__file__).parent.parent
@@ -21,7 +22,7 @@ def download_model_to_local():
     from sentence_transformers import SentenceTransformer
     
     # 本地模型目录 - 使用更小的模型
-    local_model_dir = Path("./models/all-MiniLM-L6-v2")
+    local_model_dir = Path("../models/all-MiniLM-L6-v2")
     local_model_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"下载模型到本地目录: {local_model_dir}")
@@ -32,7 +33,7 @@ def download_model_to_local():
     model.save(str(local_model_dir))
     
     print("模型下载完成！")
-    return local_model_dir
+    return str(local_model_dir)
 
 
 def load_local_model_example():
@@ -46,7 +47,7 @@ def load_local_model_example():
     print("-" * 40)
     
     # 假设模型已经下载到本地
-    model_path = "./models/all-MiniLM-L6-v2"
+    model_path = "../models/all-MiniLM-L6-v2"
     
     if not os.path.exists(model_path):
         print("本地模型不存在，先下载模型...")
@@ -92,7 +93,7 @@ def evaluate_with_local_model():
     print("=" * 60)
     
     # 1. 准备数据
-    data_dir = Path("./data")
+    data_dir = Path("../data")
     data_dir.mkdir(parents=True, exist_ok=True)
     
     dataset_dir = data_dir / "sample"
@@ -117,7 +118,7 @@ def evaluate_with_local_model():
     print(f"加载数据: {len(queries)} 个查询, {len(corpus)} 个文档")
     
     # 3. 加载本地模型
-    model_path = "./models/all-MiniLM-L6-v2"
+    model_path = "../models/all-MiniLM-L6-v2"
     if not os.path.exists(model_path):
         print("本地模型不存在，先下载模型...")
         model_path = download_model_to_local()

@@ -5,6 +5,7 @@ Evaluation metrics for retrieval performance.
 import numpy as np
 from typing import Dict, List, Any
 import math
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 def calculate_metrics(retrieval_results: Dict[str, List[str]], 
