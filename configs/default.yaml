@@ -1,0 +1,53 @@
+# Default configuration for M-BEIR evaluation
+
+experiment:
+  name: "m-beir-baseline"
+  description: "Baseline evaluation on M-BEIR benchmark"
+  seed: 42
+
+model:
+  name: "sentence-transformers/all-mpnet-base-v2"
+  type: "text"
+  device: "cuda"  # or "cpu"
+  batch_size: 32
+  max_length: 512
+
+retrieval:
+  method: "dense"  # dense, sparse, or hybrid
+  top_k: 1000
+  similarity_metric: "cosine"
+
+dataset:
+  name: "mbeir"
+  split: "test"
+  data_dir: "./data"
+  cache_dir: "./cache"
+  
+  # Dataset specific settings
+  modalities: ["text", "image"]
+  text_fields: ["query", "positive", "negative"]
+  image_fields: ["image"]
+
+evaluation:
+  metrics:
+    - "ndcg@10"
+    - "recall@10"
+    - "recall@100"
+    - "map"
+    - "mrr"
+  
+  cross_modal: true
+  within_modal: true
+
+output:
+  output_dir: "./results"
+  save_predictions: true
+  save_embeddings: false
+  visualize_results: true
+
+logging:
+  level: "INFO"
+  wandb:
+    enabled: false
+    project: "m-beir-evaluation"
+    entity: null
