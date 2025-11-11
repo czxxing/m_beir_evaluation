@@ -4,7 +4,13 @@
 """
 
 import os
+import sys
 from pathlib import Path
+
+# 添加项目根目录到Python路径
+project_root = Path(__file__).parent.parent
+sys.path.insert(0, str(project_root))
+
 from src.data.dataloader import MBEIRDataLoader, create_sample_dataset
 from src.models.retrieval_models import LocalModel, get_retrieval_model
 from src.evaluation.metrics import calculate_metrics_batch
@@ -14,14 +20,15 @@ def download_model_to_local():
     """将模型下载到本地目录的示例函数"""
     from sentence_transformers import SentenceTransformer
     
-    # 本地模型目录
-    local_model_dir = Path("./models/all-mpnet-base-v2")
+    # 本地模型目录 - 使用更小的模型
+    local_model_dir = Path("./models/all-MiniLM-L6-v2")
     local_model_dir.mkdir(parents=True, exist_ok=True)
     
     print(f"下载模型到本地目录: {local_model_dir}")
+    print("使用更小的模型: all-MiniLM-L6-v2 (约80MB)")
     
-    # 下载模型到本地目录
-    model = SentenceTransformer('sentence-transformers/all-mpnet-base-v2')
+    # 下载模型到本地目录 - 使用更小的模型
+    model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
     model.save(str(local_model_dir))
     
     print("模型下载完成！")
@@ -39,7 +46,7 @@ def load_local_model_example():
     print("-" * 40)
     
     # 假设模型已经下载到本地
-    model_path = "./models/all-mpnet-base-v2"
+    model_path = "./models/all-MiniLM-L6-v2"
     
     if not os.path.exists(model_path):
         print("本地模型不存在，先下载模型...")
@@ -62,7 +69,7 @@ def load_local_model_example():
     print("-" * 40)
     
     model_config = {
-        'name': 'local-model',
+        'name': 'local-minilm-model',
         'type': 'local',
         'path': model_path,
         'local_model_type': 'sentence_transformer',
@@ -110,13 +117,13 @@ def evaluate_with_local_model():
     print(f"加载数据: {len(queries)} 个查询, {len(corpus)} 个文档")
     
     # 3. 加载本地模型
-    model_path = "./models/all-mpnet-base-v2"
+    model_path = "./models/all-MiniLM-L6-v2"
     if not os.path.exists(model_path):
         print("本地模型不存在，先下载模型...")
         model_path = download_model_to_local()
     
     model_config = {
-        'name': 'local-mpnet-model',
+        'name': 'local-minilm-model',
         'type': 'local',
         'path': model_path,
         'local_model_type': 'sentence_transformer',
