@@ -1,0 +1,5 @@
+{"query_id": "q1", "doc_id": "d1", "score": 1}
+{"query_id": "q1", "doc_id": "d4", "score": 1}
+{"query_id": "q2", "doc_id": "d2", "score": 1}
+{"query_id": "q2", "doc_id": "d5", "score": 1}
+{"query_id": "q3", "doc_id": "d3", "score": 1}
