@@ -38,6 +38,54 @@ Run the main evaluation script:
 python run_evaluation.py --config configs/default.yaml
 ```
 
+## 本地模型使用
+
+本项目支持从本地路径加载预训练模型，适用于离线环境或需要版本控制的场景。
+
+### 方法1: 直接使用LocalModel类
+
+```python
+from src.models.retrieval_models import LocalModel
+
+# 加载本地模型
+local_model = LocalModel(
+    model_path="./models/all-mpnet-base-v2",
+    device="cpu",
+    model_type="sentence_transformer"
+)
+
+# 使用模型编码文本
+embeddings = local_model.encode_texts(["测试文本1", "测试文本2"])
+```
+
+### 方法2: 使用配置字典
+
+```python
+from src.models.retrieval_models import get_retrieval_model
+
+model_config = {
+    'name': 'local-model',
+    'type': 'local',
+    'path': './models/all-mpnet-base-v2',
+    'local_model_type': 'sentence_transformer',
+    'device': 'cpu'
+}
+
+model = get_retrieval_model(model_config)
+```
+
+### 支持的模型类型
+
+- **sentence_transformer**: Sentence Transformer格式的模型
+- **huggingface**: HuggingFace Transformers格式的模型
+
+### 示例代码
+
+运行示例代码查看完整使用方法：
+```bash
+python examples/local_model_usage.py
+```
+
 ## Features
 
 - Support for multiple retrieval models

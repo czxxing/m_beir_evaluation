@@ -113,6 +113,81 @@ class HuggingFaceModel(BaseRetrievalModel):
         return np.vstack(embeddings)
 
 
+class LocalModel(BaseRetrievalModel):
+    """Local model loader for pre-downloaded models."""
+    
+    def __init__(self, model_path: str, device: str = "cuda", model_type: str = "sentence_transformer", **kwargs):
+        """
+        Initialize local model from local path.
+        
+        Args:
+            model_path: Local path to the model directory
+            device: Device to run model on
+            model_type: Type of model (sentence_transformer, huggingface, multimodal)
+            **kwargs: Additional model-specific parameters
+        """
+        super().__init__(model_path, device, **kwargs)
+        self.model_type = model_type
+        logger.info(f"Loading local model from: {model_path}")
+        
+        # Check if model path exists
+        import os
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model path does not exist: {model_path}")
+        
+        # Load model based on type
+        if model_type == "sentence_transformer":
+            self.model = SentenceTransformer(model_path, device=self.device)
+        elif model_type == "huggingface":
+            self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+            self.model = AutoModel.from_pretrained(model_path).to(self.device)
+            self.max_length = kwargs.get('max_length', 512)
+        else:
+            # Default to sentence transformer
+            self.model = SentenceTransformer(model_path, device=self.device)
+    
+    def encode_texts(self, texts: List[str], batch_size: int = 32, **kwargs) -> np.ndarray:
+        """Encode texts using the local model."""
+        if self.model_type == "sentence_transformer":
+            return self.model.encode(texts, batch_size=batch_size, **kwargs)
+        elif self.model_type == "huggingface":
+            return self._encode_huggingface_texts(texts, batch_size, **kwargs)
+        else:
+            # Default to sentence transformer encoding
+            return self.model.encode(texts, batch_size=batch_size, **kwargs)
+    
+    def _encode_huggingface_texts(self, texts: List[str], batch_size: int = 32, **kwargs) -> np.ndarray:
+        """Encode texts using HuggingFace model with mean pooling."""
+        self.model.eval()
+        embeddings = []
+        
+        with torch.no_grad():
+            for i in range(0, len(texts), batch_size):
+                batch_texts = texts[i:i + batch_size]
+                
+                # Tokenize
+                inputs = self.tokenizer(
+                    batch_texts, 
+                    padding=True, 
+                    truncation=True, 
+                    max_length=self.max_length, 
+                    return_tensors="pt"
+                ).to(self.device)
+                
+                # Get embeddings
+                outputs = self.model(**inputs)
+                
+                # Mean pooling
+                attention_mask = inputs['attention_mask']
+                token_embeddings = outputs.last_hidden_state
+                input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+                batch_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+                
+                embeddings.append(batch_embeddings.cpu().numpy())
+        
+        return np.vstack(embeddings)
+
+
 class MultiModalModel(BaseRetrievalModel):
     """Multi-modal retrieval model supporting both text and image."""
     
@@ -154,6 +229,11 @@ def get_retrieval_model(model_config: Dict) -> BaseRetrievalModel:
         return HuggingFaceModel(model_name, device, **model_config)
     elif model_type == 'multimodal':
         return MultiModalModel(model_name, device, **model_config)
+    elif model_type == 'local':
+        # For local models, use the model path and specify model type
+        model_path = model_config.get('path', model_name)
+        local_model_type = model_config.get('local_model_type', 'sentence_transformer')
+        return LocalModel(model_path, device, local_model_type, **model_config)
     else:
         # Default to Sentence Transformer
         return SentenceTransformerModel(model_name, device, **model_config)
